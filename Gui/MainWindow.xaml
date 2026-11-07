@@ -1,0 +1,226 @@
+<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="CorePilot" Width="1200" Height="780" MinWidth="980" MinHeight="560"
+        WindowStartupLocation="CenterScreen" FontFamily="Segoe UI" FontSize="13"
+        Background="{DynamicResource BgBrush}" Foreground="{DynamicResource FgBrush}"
+        UseLayoutRounding="True" TextOptions.TextFormattingMode="Display">
+  <Window.Resources>
+    <!-- Default (dark) palette. The code replaces these with the light palette when Windows uses light mode. -->
+    <SolidColorBrush x:Key="BgBrush" Color="#202020"/>
+    <SolidColorBrush x:Key="PanelBrush" Color="#2B2B2B"/>
+    <SolidColorBrush x:Key="FgBrush" Color="#F2F2F2"/>
+    <SolidColorBrush x:Key="MutedBrush" Color="#A6A6A6"/>
+    <SolidColorBrush x:Key="AccentBrush" Color="#4CC2FF"/>
+    <SolidColorBrush x:Key="AccentFgBrush" Color="#000000"/>
+    <SolidColorBrush x:Key="LineBrush" Color="#454545"/>
+    <SolidColorBrush x:Key="HoverBrush" Color="#3A3A3A"/>
+    <SolidColorBrush x:Key="SelectBrush" Color="#383838"/>
+    <SolidColorBrush x:Key="WarnBrush" Color="#FFB454"/>
+    <SolidColorBrush x:Key="BadBrush" Color="#FF6B6B"/>
+    <SolidColorBrush x:Key="GoodBrush" Color="#6CCB5F"/>
+
+    <Style TargetType="Button">
+      <Setter Property="Foreground" Value="{DynamicResource FgBrush}"/>
+      <Setter Property="Background" Value="{DynamicResource PanelBrush}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource LineBrush}"/>
+      <Setter Property="Padding" Value="14,7"/>
+      <Setter Property="Margin" Value="0,0,8,0"/>
+      <Setter Property="Cursor" Value="Hand"/>
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="Button">
+            <Border x:Name="Bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                    BorderThickness="1" CornerRadius="4" Padding="{TemplateBinding Padding}">
+              <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Border>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsMouseOver" Value="True">
+                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource HoverBrush}"/>
+              </Trigger>
+              <Trigger Property="IsEnabled" Value="False">
+                <Setter Property="Opacity" Value="0.45"/>
+              </Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+    <Style x:Key="PrimaryButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+      <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
+      <Setter Property="Foreground" Value="{DynamicResource AccentFgBrush}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+    </Style>
+
+    <Style TargetType="TextBox">
+      <Setter Property="Background" Value="{DynamicResource PanelBrush}"/>
+      <Setter Property="Foreground" Value="{DynamicResource FgBrush}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource LineBrush}"/>
+      <Setter Property="CaretBrush" Value="{DynamicResource FgBrush}"/>
+      <Setter Property="Padding" Value="6,5"/>
+    </Style>
+
+    <!-- CheckBox ignores the window's text color by default (it uses the system's black), so set it here. -->
+    <Style TargetType="CheckBox">
+      <Setter Property="Foreground" Value="{DynamicResource FgBrush}"/>
+      <Style.Triggers>
+        <Trigger Property="IsEnabled" Value="False">
+          <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
+        </Trigger>
+      </Style.Triggers>
+    </Style>
+
+    <Style TargetType="ToolTip">
+      <Setter Property="Background" Value="{DynamicResource PanelBrush}"/>
+      <Setter Property="Foreground" Value="{DynamicResource FgBrush}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource LineBrush}"/>
+      <Setter Property="Padding" Value="10,8"/>
+      <Setter Property="ContentTemplate">
+        <Setter.Value>
+          <DataTemplate>
+            <TextBlock Text="{Binding}" TextWrapping="Wrap" MaxWidth="480"/>
+          </DataTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+
+    <Style x:Key="MutedText" TargetType="TextBlock">
+      <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
+      <Setter Property="TextWrapping" Value="Wrap"/>
+    </Style>
+
+    <!-- One setting: a check box with its name, and a small tag (Applied / risk / unavailable) on the right. -->
+    <DataTemplate x:Key="RowTemplate">
+      <Grid Margin="0,4" Background="Transparent" ToolTip="{Binding Tip}" ToolTipService.ShowDuration="60000"
+            ToolTipService.InitialShowDelay="350">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*"/>
+          <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+        <CheckBox Grid.Column="0" IsChecked="{Binding Selected, Mode=TwoWay}" IsEnabled="{Binding CanCheck}">
+          <TextBlock Text="{Binding Name}" TextWrapping="Wrap" Margin="4,0,0,0"/>
+        </CheckBox>
+        <TextBlock Grid.Column="1" Text="{Binding TagText}" Margin="10,0,0,0" FontSize="12" VerticalAlignment="Top">
+          <TextBlock.Style>
+            <Style TargetType="TextBlock">
+              <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
+              <Style.Triggers>
+                <DataTrigger Binding="{Binding TagKind}" Value="Good">
+                  <Setter Property="Foreground" Value="{DynamicResource GoodBrush}"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding TagKind}" Value="Warn">
+                  <Setter Property="Foreground" Value="{DynamicResource WarnBrush}"/>
+                </DataTrigger>
+              </Style.Triggers>
+            </Style>
+          </TextBlock.Style>
+        </TextBlock>
+      </Grid>
+    </DataTemplate>
+
+    <!-- One category: a card with a title and its settings. -->
+    <DataTemplate x:Key="CardTemplate">
+      <Border Background="{DynamicResource PanelBrush}" BorderBrush="{DynamicResource LineBrush}" BorderThickness="1"
+              CornerRadius="8" Padding="16,12,16,10" Margin="0,0,0,14">
+        <StackPanel>
+          <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+            <Border Width="4" Height="18" Background="{DynamicResource AccentBrush}" CornerRadius="2" Margin="0,0,10,0"/>
+            <TextBlock Text="{Binding Title}" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center"/>
+            <TextBlock Text="{Binding CountText}" Style="{StaticResource MutedText}" Margin="8,0,0,0" VerticalAlignment="Center"/>
+          </StackPanel>
+          <ItemsControl ItemsSource="{Binding Rows}" ItemTemplate="{StaticResource RowTemplate}"/>
+        </StackPanel>
+      </Border>
+    </DataTemplate>
+  </Window.Resources>
+
+  <Grid Margin="20,16,20,16">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="*"/>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="Auto"/>
+    </Grid.RowDefinitions>
+
+    <!-- Title and general buttons -->
+    <Grid Grid.Row="0">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="*"/>
+        <ColumnDefinition Width="Auto"/>
+      </Grid.ColumnDefinitions>
+      <StackPanel>
+        <TextBlock x:Name="TitleText" Text="CorePilot" FontSize="24" FontWeight="SemiBold"/>
+        <TextBlock x:Name="HintText" Style="{StaticResource MutedText}" Margin="0,4,0,0"/>
+      </StackPanel>
+      <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Top">
+        <Button x:Name="HistoryButton"/>
+        <Button x:Name="RefreshButton"/>
+        <Button x:Name="LangButton" Margin="0"/>
+      </StackPanel>
+    </Grid>
+
+    <!-- Selection helpers and search -->
+    <Grid Grid.Row="1" Margin="0,14,0,14">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="*"/>
+        <ColumnDefinition Width="Auto"/>
+      </Grid.ColumnDefinitions>
+      <StackPanel Orientation="Horizontal">
+        <Button x:Name="SelectPendingButton"/>
+        <Button x:Name="ClearButton"/>
+      </StackPanel>
+      <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+        <TextBlock x:Name="SearchLabel" Style="{StaticResource MutedText}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+        <TextBox x:Name="SearchBox" Width="280"/>
+      </StackPanel>
+    </Grid>
+
+    <!-- Cards in three balanced columns -->
+    <ScrollViewer x:Name="MainBody" Grid.Row="2" VerticalScrollBarVisibility="Auto" Padding="0,0,8,0">
+      <Grid>
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*"/>
+          <ColumnDefinition Width="14"/>
+          <ColumnDefinition Width="*"/>
+          <ColumnDefinition Width="14"/>
+          <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <ItemsControl x:Name="Col1" Grid.Column="0" ItemTemplate="{StaticResource CardTemplate}"/>
+        <ItemsControl x:Name="Col2" Grid.Column="2" ItemTemplate="{StaticResource CardTemplate}"/>
+        <ItemsControl x:Name="Col3" Grid.Column="4" ItemTemplate="{StaticResource CardTemplate}"/>
+      </Grid>
+    </ScrollViewer>
+
+    <!-- History (replaces the cards while open) -->
+    <Grid x:Name="HistoryPanel" Grid.Row="2" Visibility="Collapsed">
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto"/>
+        <RowDefinition Height="*"/>
+      </Grid.RowDefinitions>
+      <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+        <Button x:Name="BackButton"/>
+        <TextBlock x:Name="HistoryTitle" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center"/>
+      </StackPanel>
+      <TextBox x:Name="HistoryText" Grid.Row="1" IsReadOnly="True" FontFamily="Consolas" FontSize="12"
+               VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" TextWrapping="NoWrap"/>
+    </Grid>
+
+    <!-- Actions -->
+    <Grid Grid.Row="3" Margin="0,14,0,0">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="*"/>
+        <ColumnDefinition Width="Auto"/>
+      </Grid.ColumnDefinitions>
+      <TextBlock x:Name="FooterText" Style="{StaticResource MutedText}" VerticalAlignment="Center"/>
+      <StackPanel Grid.Column="1" Orientation="Horizontal">
+        <Button x:Name="UndoButton"/>
+        <Button x:Name="ApplyButton" Style="{StaticResource PrimaryButton}" Margin="0"/>
+      </StackPanel>
+    </Grid>
+
+    <!-- Result of the last action -->
+    <TextBox x:Name="ResultText" Grid.Row="4" Margin="0,12,0,0" Height="70" IsReadOnly="True" TextWrapping="Wrap"
+             VerticalScrollBarVisibility="Auto"/>
+  </Grid>
+</Window>

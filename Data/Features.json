@@ -1,0 +1,863 @@
+{
+  "schema": 1,
+  "features": [
+    {
+      "id": "appearance.dark-theme",
+      "category": "Appearance",
+      "risk": "Low",
+      "minBuild": 22000,
+      "reboot": "None",
+      "changes": [
+        {
+          "path": "Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",
+          "name": "AppsUseLightTheme",
+          "type": "DWord",
+          "value": 0
+        },
+        {
+          "path": "Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",
+          "name": "SystemUsesLightTheme",
+          "type": "DWord",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "appearance.disable-transparency",
+      "category": "Appearance",
+      "risk": "Low",
+      "minBuild": 22000,
+      "reboot": "None",
+      "changes": [
+        {
+          "path": "Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",
+          "name": "EnableTransparency",
+          "type": "DWord",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "explorer.show-file-extensions",
+      "category": "Explorer",
+      "risk": "Low",
+      "minBuild": 22000,
+      "reboot": "None",
+      "changes": [
+        {
+          "path": "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+          "name": "HideFileExt",
+          "type": "DWord",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "explorer.show-hidden-files",
+      "category": "Explorer",
+      "risk": "Low",
+      "minBuild": 22000,
+      "reboot": "None",
+      "changes": [
+        {
+          "path": "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+          "name": "Hidden",
+          "type": "DWord",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "id": "explorer.open-to-this-pc",
+      "category": "Explorer",
+      "risk": "Low",
+      "minBuild": 22000,
+      "reboot": "None",
+      "changes": [
+        {
+          "path": "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+          "name": "LaunchTo",
+          "type": "DWord",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "id": "taskbar.align-left",
+      "category": "Taskbar",
+      "risk": "Low",
+      "minBuild": 22000,
+      "reboot": "None",
+      "changes": [
+        {
+          "path": "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+          "name": "TaskbarAl",
+          "type": "DWord",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "taskbar.hide-task-view",
+      "category": "Taskbar",
+      "risk": "Low",
+      "minBuild": 22000,
+      "reboot": "None",
+      "changes": [
+        {
+          "path": "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+          "name": "ShowTaskViewButton",
+          "type": "DWord",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "taskbar.hide-search-box",
+      "category": "Taskbar",
+      "risk": "Low",
+      "minBuild": 22000,
+      "reboot": "None",
+      "changes": [
+        {
+          "path": "Software\\Microsoft\\Windows\\CurrentVersion\\Search",
+          "name": "SearchboxTaskbarMode",
+          "type": "DWord",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "taskbar.show-end-task",
+      "category": "Taskbar",
+      "risk": "Low",
+      "minBuild": 22631,
+      "reboot": "None",
+      "changes": [
+        {
+          "path": "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\\TaskbarDeveloperSettings",
+          "name": "TaskbarEndTask",
+          "type": "DWord",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "id": "taskbar.hide-copilot-button",
+      "category": "Taskbar",
+      "risk": "Low",
+      "minBuild": 22631,
+      "reboot": "None",
+      "changes": [
+        {
+          "path": "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+          "name": "ShowCopilotButton",
+          "type": "DWord",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "privacy.disable-advertising-id",
+      "category": "Privacy",
+      "risk": "Low",
+      "minBuild": 22000,
+      "reboot": "None",
+      "changes": [
+        {
+          "path": "Software\\Microsoft\\Windows\\CurrentVersion\\AdvertisingInfo",
+          "name": "Enabled",
+          "type": "DWord",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "privacy.disable-tailored-experiences",
+      "category": "Privacy",
+      "risk": "Low",
+      "minBuild": 22000,
+      "reboot": "None",
+      "changes": [
+        {
+          "path": "Software\\Microsoft\\Windows\\CurrentVersion\\Privacy",
+          "name": "TailoredExperiencesWithDiagnosticDataEnabled",
+          "type": "DWord",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "privacy.disable-start-suggestions",
+      "category": "Privacy",
+      "risk": "Low",
+      "minBuild": 22000,
+      "reboot": "None",
+      "changes": [
+        {
+          "path": "Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+          "name": "SystemPaneSuggestionsEnabled",
+          "type": "DWord",
+          "value": 0
+        },
+        {
+          "path": "Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+          "name": "SubscribedContent-338388Enabled",
+          "type": "DWord",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "privacy.disable-start-tip-recommendations",
+      "category": "Privacy",
+      "risk": "Low",
+      "minBuild": 22631,
+      "reboot": "None",
+      "changes": [
+        {
+          "path": "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+          "name": "Start_IrisRecommendations",
+          "type": "DWord",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "privacy.disable-tips-notifications",
+      "category": "Privacy",
+      "risk": "Low",
+      "minBuild": 22000,
+      "reboot": "None",
+      "changes": [
+        {
+          "path": "Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+          "name": "SubscribedContent-338389Enabled",
+          "type": "DWord",
+          "value": 0
+        },
+        {
+          "path": "Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+          "name": "SoftLandingEnabled",
+          "type": "DWord",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "privacy.disable-settings-suggestions",
+      "category": "Privacy",
+      "risk": "Low",
+      "minBuild": 22000,
+      "reboot": "None",
+      "changes": [
+        {
+          "path": "Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+          "name": "SubscribedContent-338393Enabled",
+          "type": "DWord",
+          "value": 0
+        },
+        {
+          "path": "Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+          "name": "SubscribedContent-353694Enabled",
+          "type": "DWord",
+          "value": 0
+        },
+        {
+          "path": "Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+          "name": "SubscribedContent-353696Enabled",
+          "type": "DWord",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "privacy.disable-lock-screen-tips",
+      "category": "Privacy",
+      "risk": "Low",
+      "minBuild": 22000,
+      "reboot": "None",
+      "changes": [
+        {
+          "path": "Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+          "name": "SubscribedContent-338387Enabled",
+          "type": "DWord",
+          "value": 0
+        },
+        {
+          "path": "Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+          "name": "RotatingLockScreenOverlayEnabled",
+          "type": "DWord",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "privacy.opt-out-language-list",
+      "category": "Privacy",
+      "risk": "Low",
+      "minBuild": 22000,
+      "reboot": "None",
+      "changes": [
+        {
+          "path": "Control Panel\\International\\User Profile",
+          "name": "HttpAcceptLanguageOptOut",
+          "type": "DWord",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "id": "privacy.disable-web-search-in-start",
+      "category": "Privacy",
+      "risk": "Medium",
+      "minBuild": 22000,
+      "reboot": "None",
+      "changes": [
+        {
+          "path": "Software\\Policies\\Microsoft\\Windows\\Explorer",
+          "name": "DisableSearchBoxSuggestions",
+          "type": "DWord",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "id": "input.disable-mouse-acceleration",
+      "category": "Input",
+      "risk": "Low",
+      "minBuild": 22000,
+      "reboot": "SignOut",
+      "changes": [
+        {
+          "path": "Control Panel\\Mouse",
+          "name": "MouseSpeed",
+          "type": "String",
+          "value": "0"
+        },
+        {
+          "path": "Control Panel\\Mouse",
+          "name": "MouseThreshold1",
+          "type": "String",
+          "value": "0"
+        },
+        {
+          "path": "Control Panel\\Mouse",
+          "name": "MouseThreshold2",
+          "type": "String",
+          "value": "0"
+        }
+      ]
+    },
+    {
+      "id": "taskbar.never-combine-buttons",
+      "category": "Taskbar",
+      "risk": "Low",
+      "minBuild": 22621,
+      "reboot": "ExplorerRestart",
+      "changes": [
+        {
+          "path": "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+          "name": "TaskbarGlomLevel",
+          "type": "DWord",
+          "value": 2
+        },
+        {
+          "path": "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+          "name": "MMTaskbarGlomLevel",
+          "type": "DWord",
+          "value": 2
+        }
+      ]
+    },
+    {
+      "id": "taskbar.show-seconds-in-clock",
+      "category": "Taskbar",
+      "risk": "Low",
+      "minBuild": 22621,
+      "reboot": "ExplorerRestart",
+      "changes": [
+        {
+          "path": "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+          "name": "ShowSecondsInSystemClock",
+          "type": "DWord",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "id": "taskbar.hide-badges",
+      "category": "Taskbar",
+      "risk": "Low",
+      "minBuild": 22000,
+      "reboot": "ExplorerRestart",
+      "changes": [
+        {
+          "path": "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+          "name": "TaskbarBadges",
+          "type": "DWord",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "taskbar.enable-show-desktop-corner",
+      "category": "Taskbar",
+      "risk": "Low",
+      "minBuild": 22621,
+      "reboot": "ExplorerRestart",
+      "changes": [
+        {
+          "path": "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+          "name": "TaskbarSd",
+          "type": "DWord",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "id": "explorer.show-full-path-in-title",
+      "category": "Explorer",
+      "risk": "Low",
+      "minBuild": 22000,
+      "reboot": "None",
+      "changes": [
+        {
+          "path": "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\CabinetState",
+          "name": "FullPath",
+          "type": "DWord",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "id": "explorer.show-empty-drives",
+      "category": "Explorer",
+      "risk": "Low",
+      "minBuild": 22000,
+      "reboot": "None",
+      "changes": [
+        {
+          "path": "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+          "name": "HideDrivesWithNoMedia",
+          "type": "DWord",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "explorer.show-protected-os-files",
+      "category": "Explorer",
+      "risk": "Medium",
+      "minBuild": 22000,
+      "reboot": "None",
+      "changes": [
+        {
+          "path": "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+          "name": "ShowSuperHidden",
+          "type": "DWord",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "id": "explorer.hide-sync-provider-notifications",
+      "category": "Explorer",
+      "risk": "Low",
+      "minBuild": 22000,
+      "reboot": "None",
+      "changes": [
+        {
+          "path": "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+          "name": "ShowSyncProviderNotifications",
+          "type": "DWord",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "explorer.disable-recent-and-frequent",
+      "category": "Explorer",
+      "risk": "Low",
+      "minBuild": 22000,
+      "reboot": "None",
+      "changes": [
+        {
+          "path": "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer",
+          "name": "ShowRecent",
+          "type": "DWord",
+          "value": 0
+        },
+        {
+          "path": "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer",
+          "name": "ShowFrequent",
+          "type": "DWord",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "explorer.show-selection-checkboxes",
+      "category": "Explorer",
+      "risk": "Low",
+      "minBuild": 22000,
+      "reboot": "None",
+      "changes": [
+        {
+          "path": "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+          "name": "AutoCheckSelect",
+          "type": "DWord",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "id": "explorer.compact-view",
+      "category": "Explorer",
+      "risk": "Low",
+      "minBuild": 22000,
+      "reboot": "None",
+      "changes": [
+        {
+          "path": "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+          "name": "UseCompactMode",
+          "type": "DWord",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "id": "start.disable-recent-items-tracking",
+      "category": "Start",
+      "risk": "Low",
+      "minBuild": 22000,
+      "reboot": "None",
+      "changes": [
+        {
+          "path": "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+          "name": "Start_TrackDocs",
+          "type": "DWord",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "privacy.disable-app-launch-tracking",
+      "category": "Privacy",
+      "risk": "Low",
+      "minBuild": 22000,
+      "reboot": "None",
+      "changes": [
+        {
+          "path": "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+          "name": "Start_TrackProgs",
+          "type": "DWord",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "privacy.disable-silent-app-installs",
+      "category": "Privacy",
+      "risk": "Low",
+      "minBuild": 22000,
+      "reboot": "None",
+      "changes": [
+        {
+          "path": "Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+          "name": "SilentInstalledAppsEnabled",
+          "type": "DWord",
+          "value": 0
+        },
+        {
+          "path": "Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+          "name": "PreInstalledAppsEnabled",
+          "type": "DWord",
+          "value": 0
+        },
+        {
+          "path": "Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+          "name": "OemPreInstalledAppsEnabled",
+          "type": "DWord",
+          "value": 0
+        },
+        {
+          "path": "Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+          "name": "PreInstalledAppsEverEnabled",
+          "type": "DWord",
+          "value": 0
+        },
+        {
+          "path": "Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+          "name": "ContentDeliveryAllowed",
+          "type": "DWord",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "privacy.disable-feedback-prompts",
+      "category": "Privacy",
+      "risk": "Low",
+      "minBuild": 22000,
+      "reboot": "None",
+      "changes": [
+        {
+          "path": "Software\\Microsoft\\Siuf\\Rules",
+          "name": "NumberOfSIUFInPeriod",
+          "type": "DWord",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "privacy.disable-finish-setup-suggestions",
+      "category": "Privacy",
+      "risk": "Low",
+      "minBuild": 22000,
+      "reboot": "None",
+      "changes": [
+        {
+          "path": "Software\\Microsoft\\Windows\\CurrentVersion\\UserProfileEngagement",
+          "name": "ScoobeSystemSettingEnabled",
+          "type": "DWord",
+          "value": 0
+        },
+        {
+          "path": "Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+          "name": "SubscribedContent-310093Enabled",
+          "type": "DWord",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "search.hide-search-highlights",
+      "category": "Search",
+      "risk": "Low",
+      "minBuild": 22000,
+      "reboot": "None",
+      "changes": [
+        {
+          "path": "Software\\Microsoft\\Windows\\CurrentVersion\\SearchSettings",
+          "name": "IsDynamicSearchBoxEnabled",
+          "type": "DWord",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "search.disable-cloud-content-search",
+      "category": "Search",
+      "risk": "Low",
+      "minBuild": 22000,
+      "reboot": "None",
+      "changes": [
+        {
+          "path": "Software\\Microsoft\\Windows\\CurrentVersion\\SearchSettings",
+          "name": "IsAADCloudSearchEnabled",
+          "type": "DWord",
+          "value": 0
+        },
+        {
+          "path": "Software\\Microsoft\\Windows\\CurrentVersion\\SearchSettings",
+          "name": "IsMSACloudSearchEnabled",
+          "type": "DWord",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "search.disable-device-search-history",
+      "category": "Search",
+      "risk": "Low",
+      "minBuild": 22000,
+      "reboot": "None",
+      "changes": [
+        {
+          "path": "Software\\Microsoft\\Windows\\CurrentVersion\\SearchSettings",
+          "name": "IsDeviceSearchHistoryEnabled",
+          "type": "DWord",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "multitasking.disable-snap-assist",
+      "category": "Multitasking",
+      "risk": "Low",
+      "minBuild": 22000,
+      "reboot": "None",
+      "changes": [
+        {
+          "path": "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+          "name": "SnapAssist",
+          "type": "DWord",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "multitasking.disable-snap-layouts-flyout",
+      "category": "Multitasking",
+      "risk": "Low",
+      "minBuild": 22000,
+      "reboot": "None",
+      "changes": [
+        {
+          "path": "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+          "name": "EnableSnapAssistFlyout",
+          "type": "DWord",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "multitasking.disable-window-snapping",
+      "category": "Multitasking",
+      "risk": "Low",
+      "minBuild": 22000,
+      "reboot": "SignOut",
+      "changes": [
+        {
+          "path": "Control Panel\\Desktop",
+          "name": "WindowArrangementActive",
+          "type": "String",
+          "value": "0"
+        }
+      ]
+    },
+    {
+      "id": "multitasking.alt-tab-hide-browser-tabs",
+      "category": "Multitasking",
+      "risk": "Low",
+      "minBuild": 22000,
+      "reboot": "None",
+      "changes": [
+        {
+          "path": "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+          "name": "MultiTaskingAltTabFilter",
+          "type": "DWord",
+          "value": 3
+        }
+      ]
+    },
+    {
+      "id": "appearance.disable-animations",
+      "category": "Appearance",
+      "risk": "Low",
+      "minBuild": 22000,
+      "reboot": "SignOut",
+      "changes": [
+        {
+          "path": "Control Panel\\Desktop\\WindowMetrics",
+          "name": "MinAnimate",
+          "type": "String",
+          "value": "0"
+        },
+        {
+          "path": "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+          "name": "TaskbarAnimations",
+          "type": "DWord",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "appearance.accent-on-start-and-taskbar",
+      "category": "Appearance",
+      "risk": "Low",
+      "minBuild": 22000,
+      "reboot": "None",
+      "changes": [
+        {
+          "path": "Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",
+          "name": "ColorPrevalence",
+          "type": "DWord",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "id": "gaming.disable-game-bar-shortcuts",
+      "category": "Gaming",
+      "risk": "Low",
+      "minBuild": 22000,
+      "reboot": "None",
+      "changes": [
+        {
+          "path": "Software\\Microsoft\\GameBar",
+          "name": "UseNexusForGameBarEnabled",
+          "type": "DWord",
+          "value": 0
+        },
+        {
+          "path": "Software\\Microsoft\\GameBar",
+          "name": "ShowStartupPanel",
+          "type": "DWord",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "gaming.disable-game-capture",
+      "category": "Gaming",
+      "risk": "Low",
+      "minBuild": 22000,
+      "reboot": "None",
+      "changes": [
+        {
+          "path": "Software\\Microsoft\\Windows\\CurrentVersion\\GameDVR",
+          "name": "AppCaptureEnabled",
+          "type": "DWord",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "id": "input.disable-sticky-keys-shortcut",
+      "category": "Input",
+      "risk": "Low",
+      "minBuild": 22000,
+      "reboot": "SignOut",
+      "changes": [
+        {
+          "path": "Control Panel\\Accessibility\\StickyKeys",
+          "name": "Flags",
+          "type": "String",
+          "value": "506"
+        }
+      ]
+    },
+    {
+      "id": "ai.disable-windows-copilot-policy",
+      "category": "AI",
+      "risk": "Medium",
+      "minBuild": 22621,
+      "reboot": "None",
+      "changes": [
+        {
+          "path": "Software\\Policies\\Microsoft\\Windows\\WindowsCopilot",
+          "name": "TurnOffWindowsCopilot",
+          "type": "DWord",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "id": "ai.disable-recall-snapshots-user-policy",
+      "category": "AI",
+      "risk": "Medium",
+      "minBuild": 22621,
+      "reboot": "None",
+      "changes": [
+        {
+          "path": "Software\\Policies\\Microsoft\\Windows\\WindowsAI",
+          "name": "DisableAIDataAnalysis",
+          "type": "DWord",
+          "value": 1
+        }
+      ]
+    }
+  ]
+}
