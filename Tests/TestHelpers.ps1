@@ -51,22 +51,62 @@ function Get-FakeWriteCount {
     return @($Fake.Log | Where-Object { $_ -like 'set *' -or $_ -like 'remove *' }).Count
 }
 
+# In-memory app provider: tests never list or remove real apps.
+function New-CpFakeAppProvider {
+    $fake = @{ IsFake = $true; Packages = (New-Object System.Collections.ArrayList); Log = (New-Object System.Collections.ArrayList); FailRemoveOn = @{}; SilentNoop = @{}; FailList = $false }
+    $fake['List'] = {
+        if ($fake.FailList) { throw 'list failed (test)' }
+        [void]$fake.Log.Add('list')
+        return @($fake.Packages.ToArray())
+    }.GetNewClosure()
+    $fake['Remove'] = {
+        param([string]$PackageFullName)
+        [void]$fake.Log.Add("remove $PackageFullName")
+        if ($fake.FailRemoveOn.ContainsKey($PackageFullName)) { throw (New-Object System.UnauthorizedAccessException('denied by test')) }
+        if ($fake.SilentNoop.ContainsKey($PackageFullName)) { return }
+        foreach ($package in @($fake.Packages.ToArray())) {
+            if ($package.PackageFullName -ceq $PackageFullName) { $fake.Packages.Remove($package) }
+        }
+    }.GetNewClosure()
+    return $fake
+}
+
+function Add-FakePackage {
+    param($Fake, [string]$Name, [string]$Version = '1.0.0.0', [bool]$NonRemovable = $false, [bool]$IsFramework = $false, [string]$SignatureKind = 'Store', [string]$Arch = 'x64')
+    $full = "${Name}_${Version}_${Arch}__8wekyb3d8bbwe"
+    $package = [pscustomobject]@{
+        Name = $Name; PackageFullName = $full; PackageFamilyName = "${Name}_8wekyb3d8bbwe"; Version = $Version
+        NonRemovable = $NonRemovable; IsFramework = $IsFramework; SignatureKind = $SignatureKind
+    }
+    [void]$Fake.Packages.Add($package)
+    return $package
+}
+
+function Get-FakeRemoveCount {
+    param($Fake)
+    return @($Fake.Log | Where-Object { $_ -like 'remove *' }).Count
+}
+
 function Initialize-CpTestEnvironment {
     param([Parameter(Mandatory)][string]$Root, [int]$Build = 26200, [string]$Language = 'en-US')
     $fake = New-CpFakeRegistry
     Set-CpRegistryProvider -Provider $fake
+    $fakeApps = New-CpFakeAppProvider
+    Set-CpAppProvider -Provider $fakeApps
     $dataRoot = Join-Path ([System.IO.Path]::GetTempPath()) ('CorePilotTest-' + [guid]::NewGuid().ToString('N'))
     Set-CpDataRoot -Path $dataRoot
     $fixedBuild = $Build
     Set-CpBuildProvider -Provider { $fixedBuild }.GetNewClosure()
     Import-CpLocale -Root $Root -Language $Language
     Import-CpCatalog -Root $Root
-    return [pscustomobject]@{ Registry = $fake; DataRoot = $dataRoot; Root = $Root }
+    Import-CpAppCatalog -Root $Root
+    return [pscustomobject]@{ Registry = $fake; Apps = $fakeApps; DataRoot = $dataRoot; Root = $Root }
 }
 
 function Remove-CpTestEnvironment {
     param($Environment)
     Set-CpRegistryProvider -Provider (New-CpFakeRegistry)
+    Set-CpAppProvider -Provider (New-CpFakeAppProvider)
     Set-CpBuildProvider -Provider $null
     Set-CpDataRoot -Path (Join-Path ([System.IO.Path]::GetTempPath()) 'CorePilotTest-unused')
     if ($Environment -and (Test-Path -LiteralPath $Environment.DataRoot)) {

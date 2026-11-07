@@ -118,18 +118,130 @@ function Show-CpPreview {
     return $pending
 }
 
+function Get-CpAppDisplayName { param($App) return "$($App.name) ($($App.id))" }
+
+# Lists the selected apps (and what would be removed) without changing anything. Returns the removable apps.
+function Show-CpAppPreview {
+    param([object[]]$Selected, [switch]$ListOnly)
+    $statuses = @{}
+    foreach ($item in (Get-CpAppStatusList)) { $statuses[$item.AppId] = $item }
+    $removable = New-Object System.Collections.ArrayList
+    if ($ListOnly) {
+        Write-CpLine (Get-CpText 'Cli.AppListTitle' @($Selected.Count))
+        Write-CpLine ''
+        $rows = New-Object System.Collections.ArrayList
+        foreach ($app in $Selected) {
+            $state = $statuses[$app.id]
+            $version = ''
+            if (@($state.Packages).Count -gt 0) { $version = [string]@($state.Packages)[0].Version }
+            [void]$rows.Add([string[]]@($app.id, $app.name, (Get-CpText "Safety.$($app.safety)"), (Get-CpText "AppStatus.$($state.Status)"), $version))
+        }
+        Write-CpTable -Headers @((Get-CpText 'Col.Id'), (Get-CpText 'Col.Name'), (Get-CpText 'Col.Safety'), (Get-CpText 'Col.Status'), (Get-CpText 'Col.Version')) -Rows $rows
+    }
+    foreach ($app in $Selected) {
+        $state = $statuses[$app.id]
+        if ($state.Status -eq 'Installed') { [void]$removable.Add($app) }
+    }
+    return $removable.ToArray()
+}
+
+# -App: list or preview (read only), -App ... -Remove: remove after the confirmations. Returns an exit code.
+function Invoke-CpCliApps {
+    param([string[]]$Patterns, [switch]$Remove, [switch]$AllowUnsafe, [switch]$Yes, [switch]$PreviewOnly)
+    try { Import-CpAppCatalog -Root $script:CpCliRoot }
+    catch {
+        Write-CpLine (Get-CpText 'Failure.unexpected')
+        Write-CpLine $_.Exception.Message
+        return 1
+    }
+    $selected = New-Object System.Collections.ArrayList
+    $unknown = $false
+    foreach ($pattern in $Patterns) {
+        $found = @(Get-CpApps | Where-Object { $_.id -like $pattern })
+        if ($found.Count -eq 0) { Write-CpLine (Get-CpText 'Cli.UnknownApp' @($pattern)); $unknown = $true; continue }
+        foreach ($item in $found) { if ($selected -notcontains $item) { [void]$selected.Add($item) } }
+    }
+    if ($unknown) { return 2 }
+
+    if (-not $Remove -or $PreviewOnly) {
+        $null = Show-CpAppPreview -Selected $selected.ToArray() -ListOnly
+        Write-CpLine ''
+        Write-CpLine (Get-CpText 'Cli.AppPreviewNote')
+        return 0
+    }
+
+    $removable = @(Show-CpAppPreview -Selected $selected.ToArray())
+    foreach ($app in $selected) {
+        if ($removable -notcontains $app) {
+            $state = Get-CpAppStatus -AppId $app.id
+            if ($null -ne $state -and $state.Status -eq 'Protected') { Write-CpLine (Get-CpText 'Cli.AppProtected' @((Get-CpAppDisplayName $app))) }
+            else { Write-CpLine (Get-CpText 'Cli.AppNotInstalled' @((Get-CpAppDisplayName $app))) }
+        }
+    }
+    if ($removable.Count -eq 0) { Write-CpLine (Get-CpText 'Cli.AppNothing'); return 0 }
+
+    Write-CpLine (Get-CpText 'Cli.AppPreviewTitle')
+    foreach ($app in $removable) {
+        $state = Get-CpAppStatus -AppId $app.id
+        Write-CpLine (Get-CpText 'Cli.AppLine' @((Get-CpAppDisplayName $app), (Get-CpText "Safety.$($app.safety)"), [string]@($state.Packages)[0].Version))
+    }
+
+    $unsafe = @($removable | Where-Object { $_.safety -ceq 'Unsafe' })
+    $allowUnsafeNow = [bool]$AllowUnsafe
+    if (-not $Yes) {
+        $confirm = $script:CpConfirm
+        if (-not (& $confirm (Get-CpText 'Cli.ConfirmRemove' @($removable.Count)))) {
+            Write-CpLine (Get-CpText 'Cli.Cancelled')
+            return 0
+        }
+        if ($unsafe.Count -gt 0 -and -not $allowUnsafeNow) {
+            $allowUnsafeNow = [bool](& $confirm (Get-CpText 'Cli.ConfirmUnsafe' @($unsafe.Count)))
+        }
+    }
+
+    $exitCode = 0
+    foreach ($app in $removable) {
+        if ($app.safety -ceq 'Unsafe' -and -not $allowUnsafeNow) {
+            Write-CpLine (Get-CpText 'Cli.UnsafeSkipped' @((Get-CpAppDisplayName $app)))
+            continue
+        }
+        $result = Invoke-CpAppRemove -AppId $app.id -Approved -AllowUnsafe:$allowUnsafeNow
+        if ($result.Success -and $result.Status -eq 'Removed') {
+            Write-CpLine (Get-CpText 'Cli.RemovedOk' @((Get-CpAppDisplayName $app)))
+            foreach ($package in @($result.Packages)) {
+                $link = Get-CpAppReinstallLink -FamilyName $package.PackageFamilyName
+                if ($link) { Write-CpLine (Get-CpText 'Cli.ReinstallHint' @($link)) }
+            }
+        }
+        elseif ($result.Success) { Write-CpLine (Get-CpText 'Cli.AppNotInstalled' @((Get-CpAppDisplayName $app))) }
+        else {
+            $text = Get-CpText "Failure.$($result.Reason)"
+            if ($result.Detail) { $text = "$text ($($result.Detail))" }
+            Write-CpLine (Get-CpText 'Cli.FailedLine' @((Get-CpAppDisplayName $app), $text))
+            $exitCode = 1
+        }
+    }
+    return $exitCode
+}
+
+$script:CpCliRoot = $null
+
 function Invoke-CpCli {
     param(
         [Parameter(Mandatory)][string]$Root,
         [string[]]$Feature = @(),
+        [string[]]$App = @(),
         [switch]$Apply,
         [switch]$Undo,
+        [switch]$Remove,
+        [switch]$AllowUnsafe,
         [switch]$Yes,
         [switch]$History,
         [switch]$PreviewOnly,
         [string]$Language
     )
     Import-CpLocale -Root $Root -Language $Language
+    $script:CpCliRoot = $Root
     try { Import-CpCatalog -Root $Root }
     catch {
         Write-CpLine (Get-CpText 'Failure.unexpected')
@@ -139,9 +251,14 @@ function Invoke-CpCli {
 
     # "powershell -File" passes "a,b" as one string, so accept comma-separated ids as well.
     $Feature = @($Feature | ForEach-Object { $_ -split ',' } | ForEach-Object { $_.Trim() } | Where-Object { $_ })
+    $App = @($App | ForEach-Object { $_ -split ',' } | ForEach-Object { $_.Trim() } | Where-Object { $_ })
 
     if ($Apply -and $Undo) { Write-CpLine (Get-CpText 'Cli.NothingToDo'); return 2 }
     if ($History) { Show-CpHistory; return 0 }
+    if ($App.Count -gt 0 -or $Remove) {
+        if ($App.Count -eq 0 -or $Feature.Count -gt 0 -or $Apply -or $Undo) { Write-CpLine (Get-CpText 'Cli.NothingToDo'); return 2 }
+        return (Invoke-CpCliApps -Patterns $App -Remove:$Remove -AllowUnsafe:$AllowUnsafe -Yes:$Yes -PreviewOnly:$PreviewOnly)
+    }
     if ($Feature.Count -eq 0) {
         if ($Apply -or $Undo) { Write-CpLine (Get-CpText 'Cli.NothingToDo'); return 2 }
         Show-CpList

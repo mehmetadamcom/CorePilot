@@ -6,9 +6,9 @@ Safe, reversible Windows 11 tweaks for the current user, written in PowerShell. 
 
 CorePilot is **inspired by [Win11Debloat](https://github.com/raphire/win11debloat)** (MIT). It aims for a similar set of features, with its own code, data and safety model. No code or data files were copied from that project.
 
-## Status: Phase 3
+## Status: Phase 3 + app removal (Phase 5, steps 1-2)
 
-50 per-user (HKCU) tweaks in ten categories (Privacy, Taskbar, File Explorer, Start, Search, Appearance, Multitasking, Gaming, AI, Input), a window (WPF, category cards) and a command-line tool, English and Turkish texts, and 100 automated tests. See [docs/ROADMAP.md](docs/ROADMAP.md) for what comes next (GUI, admin-level features, app removal, export/import, ...).
+50 per-user (HKCU) tweaks in ten categories (Privacy, Taskbar, File Explorer, Start, Search, Appearance, Multitasking, Gaming, AI, Input), a window (WPF, category cards) with a Settings view and an Apps view, a command-line tool, removal of 49 listed Store apps (window and command line), English and Turkish texts, and 165 automated tests. See [docs/ROADMAP.md](docs/ROADMAP.md) for what comes next.
 
 ## Use
 
@@ -31,6 +31,17 @@ Windows PowerShell 5.1 (included with Windows 11) is enough. No administrator ri
 ```
 
 `-Feature` accepts several ids (comma-separated) and `*` wildcards. `-WhatIf` turns `-Apply` into a preview.
+
+**Removing Store apps:** in the window, press **Apps** (next to **Settings**). It lists the listed Store apps that are installed for you, in three groups (Safe / Optional / Unsafe); apps that are not installed are not shown. Tick what you want and press **Remove selected**. A question names every app and says that CorePilot cannot undo a removal; Unsafe apps get a second question. Or on the command line:
+
+```powershell
+.\CorePilot.ps1 -App '*'                                  # list the 49 known apps: safety label and whether installed (read-only)
+.\CorePilot.ps1 -App app.clipchamp,app.bing-news          # the same for two apps (read-only)
+.\CorePilot.ps1 -App app.clipchamp,app.bing-news -Remove  # lists them, asks, removes, verifies
+.\CorePilot.ps1 -App app.xbox-tcui -Remove -AllowUnsafe   # Unsafe apps also need -AllowUnsafe (or a second yes)
+```
+
+Only apps listed in `Data/Apps.json` can be removed, by exact package name, for the current user only. Each has a label: **Safe** (extras nobody depends on), **Optional** (useful to many people) or **Unsafe** (can break the Store or Xbox sign-in). Packages that Windows marks as non-removable, frameworks and system packages are always refused. A removal **cannot be undone by CorePilot**; the app can be installed again from the Microsoft Store (the command prints the link). Design and limits: [docs/APPS-DESIGN.md](docs/APPS-DESIGN.md).
 If scripts are blocked, run once per window: `Set-ExecutionPolicy -Scope Process Bypass`.
 
 ## How it keeps you safe
@@ -48,6 +59,7 @@ If scripts are blocked, run once per window: `Set-ExecutionPolicy -Scope Process
 - The real registry writer (`Set`/`Remove` in `Src/Registry.ps1`) was exercised once on a throwaway `HKCU\Software\CorePilotTest-*` key (DWord/String write, overwrite, kind change, negative values, remove, missing key/value, rejected kinds; the key was deleted afterwards). It was then used on real tweak values once: 22 features were applied from the window (every value read back and verified) and undone with `-Undo`; all 31 registry values returned to the saved originals and the overall status counts matched the state before. Automated write-path tests still use an in-memory fake. Read access has been checked on a real Windows 11 build 26200 PC: the value names of 35 of the 50 features exist there. For the other 15 at least one value is simply absent (Windows default), which neither confirms nor refutes the name.
 - The window has been opened and driven on a real PC read-only (statuses, filtering, check boxes, language switch, history panel, screenshots), and its apply/undo flow is tested through the same code paths with a fake registry. A real mouse click on Apply with the real confirmation dialog worked once (22 features); the real Undo button click has not been exercised (undo was run through the command line). Scrollbars keep the default light Windows look in dark mode.
 - Whether each tweak takes effect immediately, after restarting Explorer, or after signing out has not been verified on a real apply. The "restart Explorer" / "sign out" hints are best guesses.
+- App removal has only been tested against an in-memory fake package list and read-only against the real list (`-App '*'`, `-WhatIf` and opening the Apps view in the window on a Windows 11 build 26200 PC). No real app has been removed with CorePilot yet. The real `Remove-AppxPackage` call, its error messages (for example when another app depends on the one being removed) and whether removed apps come back after a Windows feature update are untested.
 - The classic (Windows 10 style) context menu is not included yet: it needs a default-value write and deleting a registry key on undo, which the engine does not support.
 - Some tweaks may be ignored or reset by newer Windows builds. Check the result in Windows after applying.
 

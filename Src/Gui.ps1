@@ -3,7 +3,7 @@
 
 $script:CpGuiControlNames = @(
     'TitleText', 'HintText', 'HistoryButton', 'RefreshButton', 'LangButton',
-    'SelectPendingButton', 'ClearButton', 'SearchLabel', 'SearchBox',
+    'ModeSettingsButton', 'ModeAppsButton', 'SelectPendingButton', 'ClearButton', 'SearchLabel', 'SearchBox',
     'MainBody', 'Col1', 'Col2', 'Col3',
     'HistoryPanel', 'BackButton', 'HistoryTitle', 'HistoryText',
     'FooterText', 'UndoButton', 'ApplyButton', 'ResultText'
@@ -31,17 +31,33 @@ function Set-CpGuiStatusLine {
     $Ctx.Controls.ResultText.Text = $Text
 }
 
+# The rows of whichever view is showing: the settings, or the apps.
+function Get-CpGuiCurrentRows {
+    param($Ctx)
+    if ($Ctx.Mode -eq 'Apps') { return @($Ctx.AppRows) }
+    return @($Ctx.Rows)
+}
+
 function Update-CpGuiFooter {
     param($Ctx)
-    $selected = @($Ctx.Rows | Where-Object { $_.Selected }).Count
-    $Ctx.Controls.FooterText.Text = Get-CpText 'Gui.Footer' @($Ctx.ShownCount, $selected)
+    $selected = @(Get-CpGuiCurrentRows -Ctx $Ctx | Where-Object { $_.Selected }).Count
+    $key = 'Gui.Footer'
+    if ($Ctx.Mode -eq 'Apps') { $key = 'Gui.AppsFooter' }
+    $Ctx.Controls.FooterText.Text = Get-CpText $key @($Ctx.ShownCount, $selected)
+}
+
+# What the result box says when nothing has just happened.
+function Get-CpGuiReadyText {
+    param($Ctx)
+    if ($Ctx.Mode -eq 'Apps' -and @($Ctx.AppRows | Where-Object { $_.Status -eq 'Unknown' }).Count -gt 0) { return (Get-CpText 'Gui.AppsLoadFailed') }
+    return (Get-CpText 'Gui.Ready')
 }
 
 # Rebuilds the cards from the current rows and the search text.
 function Update-CpGuiList {
     param($Ctx)
     $c = $Ctx.Controls
-    $filtered = @(Select-CpGuiRows -Rows $Ctx.Rows -Search $c.SearchBox.Text)
+    $filtered = @(Select-CpGuiRows -Rows (Get-CpGuiCurrentRows -Ctx $Ctx) -Search $c.SearchBox.Text)
     $Ctx.ShownCount = $filtered.Count
     $cards = @(Get-CpGuiCards -Rows $filtered)
     $columns = @(Split-CpGuiColumns -Cards $cards -Count $script:CpGuiColumnCount)
@@ -51,19 +67,46 @@ function Update-CpGuiList {
     Update-CpGuiFooter -Ctx $Ctx
 }
 
-# Re-reads the registry state of every feature and rebuilds the rows, keeping the user's checkmarks.
+# Re-reads the state of the showing view (settings from the registry, or the installed apps) and rebuilds its rows,
+# keeping the user's checkmarks.
 function Update-CpGuiData {
     param($Ctx)
-    foreach ($row in @($Ctx.Rows)) { $Ctx.Selected[$row.Id] = [bool]$row.Selected }
-    $Ctx.Rows = @(Get-CpGuiRows -Selected $Ctx.Selected)
+    foreach ($row in @(Get-CpGuiCurrentRows -Ctx $Ctx)) { $Ctx.Selected[$row.Id] = [bool]$row.Selected }
+    if ($Ctx.Mode -eq 'Apps') { $Ctx.AppRows = @(Get-CpGuiAppRows -Selected $Ctx.Selected) }
+    else { $Ctx.Rows = @(Get-CpGuiRows -Selected $Ctx.Selected) }
     Update-CpGuiList -Ctx $Ctx
+}
+
+# Shows or hides the controls that only belong to one view, and marks the active view button.
+function Update-CpGuiMode {
+    param($Ctx)
+    $c = $Ctx.Controls
+    $inApps = ($Ctx.Mode -eq 'Apps')
+    $primary = $Ctx.Window.FindResource('PrimaryButton')
+    $active = $c.ModeSettingsButton
+    $inactive = $c.ModeAppsButton
+    if ($inApps) { $active = $c.ModeAppsButton; $inactive = $c.ModeSettingsButton }
+    $active.Style = $primary
+    $inactive.ClearValue([System.Windows.FrameworkElement]::StyleProperty)
+
+    $shown = [System.Windows.Visibility]::Visible
+    $hidden = [System.Windows.Visibility]::Collapsed
+    # Quick select ticks low-risk settings; removals are never ticked for you. Removing an app has no undo.
+    if ($inApps) { $c.SelectPendingButton.Visibility = $hidden; $c.UndoButton.Visibility = $hidden }
+    else { $c.SelectPendingButton.Visibility = $shown; $c.UndoButton.Visibility = $shown }
+    $hintKey = 'Gui.Hint'
+    $applyKey = 'Gui.ApplySelected'
+    if ($inApps) { $hintKey = 'Gui.AppsHint'; $applyKey = 'Gui.RemoveSelected' }
+    $c.HintText.Text = Get-CpText $hintKey
+    $c.ApplyButton.Content = Get-CpText $applyKey
 }
 
 function Update-CpGuiTexts {
     param($Ctx)
     $c = $Ctx.Controls
     $Ctx.Window.Title = Get-CpText 'Gui.Title'
-    $c.HintText.Text = Get-CpText 'Gui.Hint'
+    $c.ModeSettingsButton.Content = Get-CpText 'Gui.ModeSettings'
+    $c.ModeAppsButton.Content = Get-CpText 'Gui.ModeApps'
     $c.SearchLabel.Text = Get-CpText 'Gui.Search'
     $c.HistoryButton.Content = Get-CpText 'Gui.History'
     $c.RefreshButton.Content = Get-CpText 'Gui.Refresh'
@@ -73,7 +116,7 @@ function Update-CpGuiTexts {
     $c.SelectPendingButton.Content = Get-CpText 'Gui.SelectPending'
     $c.ClearButton.Content = Get-CpText 'Gui.ClearSelection'
     $c.UndoButton.Content = Get-CpText 'Gui.UndoSelected'
-    $c.ApplyButton.Content = Get-CpText 'Gui.ApplySelected'
+    Update-CpGuiMode -Ctx $Ctx
 }
 
 function Show-CpGuiMessage {
@@ -124,10 +167,34 @@ function Invoke-CpGuiUndoSelected {
     Complete-CpGuiOperation -Ctx $Ctx -Result (Invoke-CpGuiOperation -Ids $ids -Action Undo)
 }
 
+function Invoke-CpGuiRemoveSelected {
+    param($Ctx)
+    foreach ($row in $Ctx.AppRows) { $Ctx.Selected[$row.Id] = [bool]$row.Selected }
+    $picked = @($Ctx.AppRows | Where-Object { $_.Selected -and $_.CanCheck })
+    if ($picked.Count -eq 0) { Set-CpGuiStatusLine $Ctx (Get-CpText 'Gui.NothingSelected'); return }
+    $confirm = $Ctx.Confirm
+    # Name every app, so ticked ones hidden by a search cannot be removed unseen.
+    $names = @($picked | ForEach-Object { $label = '- ' + $_.Name; if ($_.Category -ceq 'Unsafe') { $label += ' [' + $_.RiskText + ']' }; $label })
+    if ($names.Count -gt 12) { $names = @($names | Select-Object -First 12) + (Get-CpText 'Gui.AndMore' @(($picked.Count - 12))) }
+    $question = (Get-CpText 'Gui.ConfirmRemove' @($picked.Count)) + "`n`n" + ($names -join "`n")
+    if (-not (& $confirm $question)) {
+        Set-CpGuiStatusLine $Ctx (Get-CpText 'Cli.Cancelled')
+        return
+    }
+    $unsafe = @($picked | Where-Object { $_.Category -ceq 'Unsafe' })
+    $allowed = @()
+    if ($unsafe.Count -gt 0) {
+        $unsafeNames = @($unsafe | ForEach-Object { '- ' + $_.Name })
+        $second = (Get-CpText 'Gui.ConfirmUnsafe' @($unsafe.Count)) + "`n`n" + ($unsafeNames -join "`n")
+        if (& $confirm $second) { $allowed = @($unsafe | ForEach-Object { $_.Id }) }
+    }
+    Complete-CpGuiOperation -Ctx $Ctx -Result (Invoke-CpGuiAppOperation -Ids @($picked | ForEach-Object { $_.Id }) -AllowUnsafeIds $allowed)
+}
+
 function Complete-CpGuiOperation {
     param($Ctx, $Result)
     foreach ($id in $Result.OkIds) { $Ctx.Selected[$id] = $false }
-    foreach ($row in $Ctx.Rows) { if ($Result.OkIds -contains $row.Id) { $row.Selected = $false } }
+    foreach ($row in (Get-CpGuiCurrentRows -Ctx $Ctx)) { if ($Result.OkIds -contains $row.Id) { $row.Selected = $false } }
     $text = @($Result.Lines) + @($Result.Hints) + @(Get-CpText 'Gui.ResultSummary' @($Result.Succeeded, $Result.Failed))
     Update-CpGuiData -Ctx $Ctx
     Set-CpGuiStatusLine $Ctx ($text -join "`n")
@@ -137,8 +204,9 @@ function Complete-CpGuiOperation {
 # 'Pending' ticks only settings that are low risk, can be applied, and are not applied yet. Riskier ones stay a conscious choice.
 function Set-CpGuiSelectionMode {
     param($Ctx, [ValidateSet('Pending', 'None')][string]$Mode)
-    foreach ($row in $Ctx.Rows) {
+    foreach ($row in (Get-CpGuiCurrentRows -Ctx $Ctx)) {
         if ($Mode -eq 'None') { $row.Selected = $false }
+        elseif ($Ctx.Mode -eq 'Apps') { continue }
         elseif ($row.CanCheck -and $row.Risk -ceq 'Low' -and $row.Status -in @('NotApplied', 'Partial')) { $row.Selected = $true }
     }
     # The cards show the same objects, so rebuild them to refresh the check boxes.
@@ -152,7 +220,19 @@ function Switch-CpGuiLanguage {
     Import-CpLocale -Root $Ctx.Root -Language $next
     Update-CpGuiTexts -Ctx $Ctx
     Update-CpGuiData -Ctx $Ctx
-    Set-CpGuiStatusLine $Ctx (Get-CpText 'Gui.Ready')
+    Set-CpGuiStatusLine $Ctx (Get-CpGuiReadyText -Ctx $Ctx)
+}
+
+# Switches between the settings and the apps. The apps are read from Windows each time, so the list is current.
+function Switch-CpGuiMode {
+    param($Ctx, [ValidateSet('Settings', 'Apps')][string]$Mode)
+    foreach ($row in @(Get-CpGuiCurrentRows -Ctx $Ctx)) { $Ctx.Selected[$row.Id] = [bool]$row.Selected }
+    $Ctx.Mode = $Mode
+    $Ctx.Controls.SearchBox.Text = ''
+    Show-CpGuiHistory -Ctx $Ctx -Visible $false
+    Update-CpGuiMode -Ctx $Ctx
+    Update-CpGuiData -Ctx $Ctx
+    Set-CpGuiStatusLine $Ctx (Get-CpGuiReadyText -Ctx $Ctx)
 }
 
 function Show-CpGuiHistory {
@@ -177,13 +257,15 @@ function Invoke-CpGuiAction {
         switch ($Name) {
             'Search' { Update-CpGuiList -Ctx $ctx }
             'SelectionToggled' { Update-CpGuiFooter -Ctx $ctx }
-            'Refresh' { Update-CpGuiData -Ctx $ctx; Set-CpGuiStatusLine $ctx (Get-CpText 'Gui.Ready') }
+            'Refresh' { Update-CpGuiData -Ctx $ctx; Set-CpGuiStatusLine $ctx (Get-CpGuiReadyText -Ctx $ctx) }
             'Language' { Switch-CpGuiLanguage -Ctx $ctx }
+            'ModeSettings' { Switch-CpGuiMode -Ctx $ctx -Mode Settings }
+            'ModeApps' { Switch-CpGuiMode -Ctx $ctx -Mode Apps }
             'History' { Show-CpGuiHistory -Ctx $ctx -Visible $true }
             'Back' { Show-CpGuiHistory -Ctx $ctx -Visible $false }
             'SelectPending' { Set-CpGuiSelectionMode -Ctx $ctx -Mode Pending }
             'ClearSelection' { Set-CpGuiSelectionMode -Ctx $ctx -Mode None }
-            'Apply' { Invoke-CpGuiApplySelected -Ctx $ctx }
+            'Apply' { if ($ctx.Mode -eq 'Apps') { Invoke-CpGuiRemoveSelected -Ctx $ctx } else { Invoke-CpGuiApplySelected -Ctx $ctx } }
             'Undo' { Invoke-CpGuiUndoSelected -Ctx $ctx }
             default { throw "Unknown window action '$Name'." }
         }
@@ -196,6 +278,7 @@ function New-CpGuiWindow {
     Add-Type -AssemblyName PresentationFramework, PresentationCore, WindowsBase
     Import-CpLocale -Root $Root -Language $Language
     Import-CpCatalog -Root $Root
+    Import-CpAppCatalog -Root $Root
 
     $xaml = [System.IO.File]::ReadAllText((Join-Path $Root 'Gui\MainWindow.xaml'), [System.Text.Encoding]::UTF8)
     $window = [System.Windows.Markup.XamlReader]::Parse($xaml)
@@ -211,7 +294,9 @@ function New-CpGuiWindow {
         Root       = $Root
         Controls   = $controls
         Selected   = @{}
+        Mode       = 'Settings'
         Rows       = @()
+        AppRows    = @()
         ShownCount = 0
         Confirm    = {
             param([string]$Text)
@@ -241,6 +326,8 @@ function Connect-CpGuiEvents {
     $c.MainBody.AddHandler([System.Windows.Controls.Primitives.ToggleButton]::UncheckedEvent, $toggled)
     $c.RefreshButton.Add_Click({ Invoke-CpGuiAction 'Refresh' })
     $c.LangButton.Add_Click({ Invoke-CpGuiAction 'Language' })
+    $c.ModeSettingsButton.Add_Click({ Invoke-CpGuiAction 'ModeSettings' })
+    $c.ModeAppsButton.Add_Click({ Invoke-CpGuiAction 'ModeApps' })
     $c.HistoryButton.Add_Click({ Invoke-CpGuiAction 'History' })
     $c.BackButton.Add_Click({ Invoke-CpGuiAction 'Back' })
     $c.SelectPendingButton.Add_Click({ Invoke-CpGuiAction 'SelectPending' })

@@ -7,6 +7,7 @@
 . (Join-Path $PSScriptRoot 'Registry.ps1')
 . (Join-Path $PSScriptRoot 'Store.ps1')
 . (Join-Path $PSScriptRoot 'Engine.ps1')
+. (Join-Path $PSScriptRoot 'Apps.ps1')
 . (Join-Path $PSScriptRoot 'Cli.ps1')
 . (Join-Path $PSScriptRoot 'GuiModel.ps1')
 . (Join-Path $PSScriptRoot 'Gui.ps1')

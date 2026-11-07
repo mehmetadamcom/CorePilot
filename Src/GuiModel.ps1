@@ -95,6 +95,107 @@ function Get-CpGuiRows {
     return $rows.ToArray()
 }
 
+# One row per app that is installed (or protected, or of unknown state), grouped later by safety label. Apps that are not
+# installed are left out: there is nothing to do with them. Same row shape as Get-CpGuiRows, so the same cards show them.
+function Get-CpGuiAppRows {
+    param([hashtable]$Selected = @{})
+    $statuses = @{}
+    foreach ($item in (Get-CpAppStatusList)) { $statuses[$item.AppId] = $item }
+    $rows = New-Object System.Collections.ArrayList
+    foreach ($app in (Get-CpApps)) {
+        $state = $statuses[$app.id]
+        if ($state.Status -eq 'NotInstalled') { continue }
+        $id = $app.id
+        $name = [string]$app.name
+        $description = Get-CpText "AppDesc.$id"
+        $safetyText = Get-CpText "Safety.$($app.safety)"
+        $statusText = Get-CpText "AppStatus.$($state.Status)"
+        $version = ''
+        if (@($state.Packages).Count -gt 0) { $version = [string]@($state.Packages)[0].Version }
+        $canCheck = ($state.Status -eq 'Installed')
+
+        $tagKind = ''
+        $tagText = ''
+        if ($state.Status -ne 'Installed') { $tagKind = 'Muted'; $tagText = $statusText }
+        elseif ($app.safety -ceq 'Unsafe') { $tagKind = 'Warn'; $tagText = $safetyText }
+
+        $tip = New-Object System.Collections.ArrayList
+        [void]$tip.Add($name)
+        [void]$tip.Add('')
+        [void]$tip.Add($description)
+        [void]$tip.Add('')
+        [void]$tip.Add("$(Get-CpText 'Col.Safety'): $safetyText    $(Get-CpText 'Col.Status'): $statusText")
+        if ($version) { [void]$tip.Add("$(Get-CpText 'Col.Version'): $version") }
+        [void]$tip.Add('')
+        [void]$tip.Add((Get-CpText 'Gui.AppNoUndo'))
+
+        [void]$rows.Add([pscustomobject]@{
+                Id           = $id
+                Name         = $name
+                Description  = $description
+                Category     = $app.safety
+                CategoryText = (Get-CpText "Gui.AppGroup.$($app.safety)")
+                Risk         = $app.safety
+                RiskText     = $safetyText
+                Status       = $state.Status
+                StatusText   = $statusText
+                Selected     = ($canCheck -and $Selected.ContainsKey($id) -and [bool]$Selected[$id])
+                CanSelect    = $canCheck
+                CanCheck     = $canCheck
+                RebootText   = ''
+                HasSaved     = $false
+                TagKind      = $tagKind
+                TagText      = $tagText
+                Tip          = ($tip -join "`n")
+                Changes      = ''
+                Search       = ("$id $name $description $safetyText").ToLowerInvariant()
+            })
+    }
+    return $rows.ToArray()
+}
+
+# Removes the given apps. The caller has already asked the user; $AllowUnsafeIds are the Unsafe apps the user confirmed
+# separately. Same result shape as Invoke-CpGuiOperation.
+function Invoke-CpGuiAppOperation {
+    param([string[]]$Ids, [string[]]$AllowUnsafeIds = @())
+    $lines = New-Object System.Collections.ArrayList
+    $hints = New-Object System.Collections.ArrayList
+    $okIds = New-Object System.Collections.ArrayList
+    $failed = 0
+    foreach ($id in $Ids) {
+        $app = Get-CpApp -Id $id
+        if ($null -eq $app) { continue }
+        $name = [string]$app.name
+        $allowed = ($AllowUnsafeIds -ccontains $id)
+        if ($app.safety -ceq 'Unsafe' -and -not $allowed) {
+            [void]$lines.Add((Get-CpText 'Cli.UnsafeSkipped' @($name)))
+            continue
+        }
+        $result = Invoke-CpAppRemove -AppId $id -Approved -AllowUnsafe:$allowed
+        if ($result.Success -and $result.Status -eq 'Removed') {
+            [void]$lines.Add((Get-CpText 'Cli.RemovedOk' @($name)))
+            [void]$okIds.Add($id)
+        }
+        elseif ($result.Success) {
+            [void]$lines.Add((Get-CpText 'Cli.AppNotInstalled' @($name)))
+        }
+        else {
+            $failed++
+            $text = Get-CpText "Failure.$($result.Reason)"
+            if ($result.Detail) { $text = "$text ($($result.Detail))" }
+            [void]$lines.Add((Get-CpText 'Cli.FailedLine' @($name, $text)))
+        }
+    }
+    if ($okIds.Count -gt 0) { [void]$hints.Add((Get-CpText 'Gui.AppReinstallNote')) }
+    return [pscustomobject]@{
+        Succeeded = $okIds.Count
+        Failed    = $failed
+        OkIds     = $okIds.ToArray()
+        Lines     = $lines.ToArray()
+        Hints     = $hints.ToArray()
+    }
+}
+
 # $Category: a category key, or '*' for all. $Search: free text, matched against id, name, description and category.
 function Select-CpGuiRows {
     param($Rows, [string]$Category = '*', [string]$Search = '')

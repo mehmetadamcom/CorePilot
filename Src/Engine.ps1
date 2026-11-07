@@ -5,7 +5,8 @@ $script:CpReasonCodes = @(
     'approval-required', 'unknown-operation', 'busy', 'already-applied', 'windows-build-too-old',
     'windows-build-unknown', 'access-denied', 'registry-error', 'unsupported-value', 'capture-failed',
     'verify-failed', 'revert-verify-failed', 'no-original-state', 'captured-state-mismatch',
-    'store-unavailable', 'unexpected', 'interrupted'
+    'store-unavailable', 'unexpected', 'interrupted',
+    'unsafe-needs-confirmation', 'app-not-installed', 'app-protected', 'app-remove-failed', 'app-list-failed'
 )
 $script:CpSupportedKinds = @('DWord', 'String')
 $script:CpRevertableStates = @('Verified', 'Applying', 'Reverting', 'RecoveryNeeded')

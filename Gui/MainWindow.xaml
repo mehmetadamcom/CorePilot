@@ -167,6 +167,8 @@
         <ColumnDefinition Width="Auto"/>
       </Grid.ColumnDefinitions>
       <StackPanel Orientation="Horizontal">
+        <Button x:Name="ModeSettingsButton"/>
+        <Button x:Name="ModeAppsButton" Margin="0,0,24,0"/>
         <Button x:Name="SelectPendingButton"/>
         <Button x:Name="ClearButton"/>
       </StackPanel>

@@ -16,6 +16,14 @@ PowerShell 5.1 tool for safe, reversible Windows 11 tweaks. Modeled on the featu
 - Every new tweak is a data entry in `Data/Features.json` (HKCU, DWord/String only until the engine supports more) plus Name/Description in both locales. `Test-CpCatalog` and the locale tests must pass.
 - Writes go through `Write-CpRegistry`/`Remove-CpRegistry` only (allowlist from the catalog). New anything-admin/HKLM work needs its own design and user approval first.
 
+## App removal rules
+- Only packages in `Data/Apps.json` (exact name) may be removed, current user only. `Test-CpAppCatalog` also rejects core Windows packages (`$script:CpAppNeverRemove`); never shorten that list. Windows-protected packages (NonRemovable, framework, system-signed) are refused at run time as well.
+- Package access goes through the app provider (`Set-CpAppProvider`). Tests use `New-CpFakeAppProvider` (set by `Initialize-CpTestEnvironment`); a test must never list or remove real apps.
+- Removal cannot be undone: never say or imply otherwise in texts. Record first (`%LOCALAPPDATA%\CorePilot\apps`), verify after, never report success when a package is still there.
+- Unsafe apps need a separate confirmation (`-AllowUnsafe` or a second yes). Do not add apps the user installed themselves (Claude, PowerToys, VS Code, WhatsApp, ...).
+- Under `-WhatIf` the Appx module prints "Set Alias" noise when it loads; the real list call switches `$global:WhatIfPreference` off while reading (see `Src/Apps.ps1`).
+- Real removal on this PC only after the user explicitly approves each app, one at a time.
+
 ## GUI rules
 - Window logic lives in `Src/GuiModel.ps1` (testable, no window); `Src/Gui.ps1` is a thin WPF layer over it; layout in `Gui/MainWindow.xaml` (ASCII only, no texts: all texts come from `Locales`).
 - All window events go through `Invoke-CpGuiAction` using `$script:CpGuiCtx` (handlers run after the creating function returned; do not rely on function locals or `GetNewClosure` there).
@@ -23,6 +31,7 @@ PowerShell 5.1 tool for safe, reversible Windows 11 tweaks. Modeled on the featu
 - Apply/Undo must always ask first and name every feature (selection can include rows hidden by a filter). Tests inject `$ctx.Confirm`/`$ctx.Notify`; never show a real MessageBox in tests.
 - Never apply anything to the real PC while checking the window; screenshots are taken read-only.
 - The window is launched without a console (`conhost.exe --headless`), so errors must be visible some other way: `Show-CpGui` catches start-up failures into a message box + `gui-error.log`. Keep it that way.
+- The window has two views (`$ctx.Mode`: `Settings` / `Apps`) that share the same card columns; the apps are read from Windows only when the Apps view is opened or refreshed. Anything that touches "the rows" must go through `Get-CpGuiCurrentRows`. The Apps view never has quick select or an undo button, and its question must say that a removal cannot be undone.
 - WPF `CheckBox` ignores the window text color: keep the implicit `CheckBox` style in `MainWindow.xaml`.
 - A `.lnk` that starts hidden PowerShell was deleted within minutes on the user's PC (Kaspersky + Defender present); do not ship shortcut generators. Keep `CorePilot.cmd` transparent: a few readable lines, no encoded commands, no downloads.
 
